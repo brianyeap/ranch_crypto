@@ -141,7 +141,7 @@ def get_price_data(pool_id):
                             if open_candle_timestamp == 0:
                                 open_candle_timestamp = timestamp_ms
                                 open_price = price
-                                next_candle_timestamp = timestamp_ms + 60000
+                                next_candle_timestamp = timestamp_ms + 15 * 60000
 
                                 candle_temp_array.append({"timestamp": open_candle_timestamp, "price": price})
                             elif next_candle_timestamp >= timestamp_ms:

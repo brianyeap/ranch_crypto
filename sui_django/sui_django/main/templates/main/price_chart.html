@@ -150,17 +150,19 @@
       fetch(`${window.location.origin}/api-price/${poolId}`)
       .then(res => res.json())
       .then(data => {
-            let tempArray = []
-            if (data[0]) {
-                data.map(d => {
-                if (d.processed_array[0]) {
-                    tempArray.push(d.processed_array)
-                    return {time: parseInt(d.processed_array[0]/1000), open: d.processed_array[1], high: d.processed_array[2], low: d.processed_array[3], close: d.processed_array[4]}
-                }
-            });
-            const cdata = tempArray.map(d => {
-                return {time:d[0]/1000,open:parseFloat(d[1]),high:parseFloat(d[2]),low:parseFloat(d[3]),close:parseFloat(d[4])}
-            });
+        let tempArray = []
+        data.map(d => {
+            if (d.processed_array[0]) {
+                tempArray.push(d.processed_array)
+                return {time: parseInt(d.processed_array[0]/1000), open: d.processed_array[1], high: d.processed_array[2], low: d.processed_array[3], close: d.processed_array[4]}
+            }
+        });
+        const cdata = tempArray.map(d => {
+            return {time:d[0]/1000,open:parseFloat(d[1]),high:parseFloat(d[2]),low:parseFloat(d[3]),close:parseFloat(d[4])}
+        });
+
+        if (data[0]) {
+            candleSeries.setData(cdata);
 
             data.slice(0).reverse().map(d => {
               $('.token_x').text(d.token_x)
