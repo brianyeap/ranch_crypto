@@ -21,6 +21,15 @@
     {
         opacity:0.5 !important;
     }
+
+    .red {
+        color: red;
+    }
+
+    .green {
+        color: green;
+    }
+
     </style>
 
 </head>
@@ -44,7 +53,7 @@
         </div>
     </div>
     <div class="container d-flex">
-        <p>O<span></span>H<span></span>L<span></span>C<span></span></p>
+        <div id="ohlc"></div>
     </div>
     <div class="container d-flex">
         <div id="tvchart"></div>
@@ -140,8 +149,23 @@
 
     chart.subscribeCrosshairMove((param) => {
         const ohlc = param.seriesPrices.get(candleSeries);
-        log(ohlc)
+        renderOHLC(ohlc)
     })
+
+    const renderOHLC = (d) => {
+        const { open, high, low, close } = d;
+
+        const markup = `<p>O <span class="${
+            open > close ? 'red' : 'green'
+        }">${open}</span> H <span class="${
+            open > close ? 'red' : 'green'
+        }">${high}</span> L <span class="${
+            open > close ? 'red' : 'green'
+        }">${low}</span> C <span class="${
+            open > close ? 'red' : 'green'
+        }">${close}</span>`
+        document.getElementById('ohlc').innerHTML = markup;
+    }
 
     var poolId = window.location.pathname.replace('/','').replace('chart/','')
 
