@@ -70,7 +70,7 @@ def get_transaction_info(param_data):
     return get_transaction_response.json()
 
 
-def get_price_data(pool_id):
+def get_price_data(pool_id, timeframe):
     try:
         address_txs = get_transactions(pool_id)[0]['result']
         object_data = get_object(pool_id)[0]['result']['details']['data']['fields']
@@ -144,7 +144,7 @@ def get_price_data(pool_id):
                             if open_candle_timestamp == 0:
                                 open_candle_timestamp = timestamp_ms
                                 open_price = price
-                                next_candle_timestamp = timestamp_ms + 15 * 60000
+                                next_candle_timestamp = timestamp_ms + int(timeframe) * 60000
                                 candle_volume = 0
 
                                 candle_temp_array.append({"timestamp": open_candle_timestamp, "price": price})
@@ -180,13 +180,15 @@ def get_price_data(pool_id):
                             pass
     except TypeError:
         return []
+    except ValueError:
+        return []
 
     return price_data_array
 
 
 # API
-def get_price(request, pool_id):
-    data = get_price_data(pool_id)
+def get_price(request, pool_id, timeframe):
+    data = get_price_data(pool_id, timeframe)
     return JsonResponse(data, safe=False)
 
 

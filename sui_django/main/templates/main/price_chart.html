@@ -49,7 +49,7 @@
             <h2>
                 Suiswap <span class="token_x"></span> / <span class="token_y"></span>
             </h2>
-            <button id="updateSite" class="btn-sm btn-primary mb-2">Update chart</button>
+            <button id="updateSite" onclick="updateChartFunc()" class="btn-sm btn-primary mb-2">Update chart</button>
         </div>
     </div>
     <div class="container d-flex">
@@ -58,6 +58,18 @@
     <div class="container d-flex">
         <div>Volume: <span id="candleVolume"></span><span class="token_y"></span></div>
     </div>
+
+    <div class="container d-flex mt-2">
+        <div class="btn btn btn-outline-primary btn-sm mx-1" data-min="1" onclick="updateTimeframe(this)"> 1 Min</div>
+        <div class="btn btn btn-outline-primary btn-sm mx-1" data-min="5" onclick="updateTimeframe(this)"> 5 Min</div>
+        <div class="btn btn btn-outline-primary btn-sm mx-1" data-min="15" onclick="updateTimeframe(this)"> 15 Min</div>
+        <div class="btn btn btn-outline-primary btn-sm mx-1" data-min="30" onclick="updateTimeframe(this)"> 30 Min</div>
+        <div class="btn btn btn-outline-primary btn-sm mx-1" data-min="60" onclick="updateTimeframe(this)"> 1 Hour</div>
+        <div class="btn btn btn-outline-primary btn-sm mx-1" data-min="240" onclick="updateTimeframe(this)"> 4 Hour</div>
+        <div class="btn btn btn-outline-primary btn-sm mx-1" data-min="1440" onclick="updateTimeframe(this)"> 1 Day</div>
+        <div class="btn btn btn-outline-primary btn-sm mx-1" data-min="10080" onclick="updateTimeframe(this)"> 1 Week</div>
+    </div>
+
 
     <div class="container d-flex">
         <div id="tvchart"></div>
@@ -186,9 +198,11 @@
 
     var poolId = window.location.pathname.replace('/','').replace('chart/','')
 
-    $('#updateSite').click(function() {
+    var chartTimeFrame = 15
+
+    function updateChartFunc() {
       $('#market-history tr').remove()
-      fetch(`${window.location.origin}/api-price/${poolId}`)
+      fetch(`${window.location.origin}/api-price/${poolId}${chartTimeFrame}`)
       .then(res => res.json())
       .then(data => {
         let tempArray = []
@@ -212,18 +226,25 @@
               // LP DATA
               $('#lp_x').text(Math.round((d.lp_x / 10**8) * 100) / 100)
               $('#lp_y').text(d.lp_y)
-              $('#market-history').append(`<tr class="${d.type == 'buy' ? 'table-success' : 'table-danger'}"><td>${d.address}</td><td>${d.type}</td><td>${d.type == 'buy' ? d.out_amount : d.in_amount} ${d.token_x}</td><td>${d.price}</td><td><a href="https://explorer.devnet.sui.io/transactions/${encodeURI(d.transaction_id)}">Tx Id</a></td></tr>`)
+              $('#market-history').append(`<tr class="${d.type == 'buy' ? 'table-success' : 'table-danger'}"><td>${d.address}</td><td>${d.type}</td><td>${d.type == 'buy' ? d.out_amount : d.in_amount}</td><td>${d.type == 'sell' ? d.out_amount : d.in_amount}</td><td>${d.price}</td><td><a href="https://explorer.devnet.sui.io/transactions/${encodeURI(d.transaction_id)}">Tx Id</a></td></tr>`)
             });
         } else {
             alert_modal('Error', 'Couldn\'t load data !');
         }
       })
       .catch(err => log(err))
-    })
+    }
+
+    function updateTimeframe(elem) {
+        chartTimeFrame = elem.getAttribute('data-min')
+        updateChartFunc()
+    }
+
+    var chartAutoRefresh = window.setInterval(updateChartFunc, 30000);
 
     var OHLCData = []
     var volumeData = []
-    fetch(`${window.location.origin}/api-price/${poolId}`)
+    fetch(`${window.location.origin}/api-price/${poolId}${chartTimeFrame}`)
       .then(res => res.json())
       .then(data => {
         let tempArray = []
