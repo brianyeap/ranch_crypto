@@ -56,6 +56,10 @@
         <div id="ohlc"></div>
     </div>
     <div class="container d-flex">
+        <div>Volume: <span id="candleVolume"></span><span class="token_y"></span></div>
+    </div>
+
+    <div class="container d-flex">
         <div id="tvchart"></div>
         <div class="container">
             <div class="card" style="width: 18rem;">
@@ -77,6 +81,7 @@
                 <th scope="col">Address</th>
                 <th scope="col">Type</th>
                 <th scope="col">Token (<span class="token_x"></span>)</th>
+                <th scope="col">Token (<span class="token_y"></span>)</th>
                 <th scope="col">Price/Token</th>
                 <th scope="col">Tx Id</th>
             </tr>
@@ -149,13 +154,25 @@
 
     chart.subscribeCrosshairMove((param) => {
         const ohlc = param.seriesPrices.get(candleSeries);
-        renderOHLC(ohlc)
+
+        if (ohlc) {
+            let candleCount = 0
+            OHLCData.map(d => {
+                if ((ohlc.open + ohlc.high + ohlc.low + ohlc.close + ohlc.close) == (d.open + d.high + d.low + d.close + d.close)) {
+                    $('#candleVolume').text(`${volumeData[candleCount]} `)
+                }
+                candleCount += 1
+            })
+
+            renderOHLC(ohlc)
+        }
     })
 
     const renderOHLC = (d) => {
+
         const { open, high, low, close } = d;
 
-        const markup = `<p>O <span class="${
+        const markup = `<p class="mb-0">O <span class="${
             open > close ? 'red' : 'green'
         }">${open}</span> H <span class="${
             open > close ? 'red' : 'green'
@@ -204,17 +221,23 @@
       .catch(err => log(err))
     })
 
+    var OHLCData = []
+    var volumeData = []
     fetch(`${window.location.origin}/api-price/${poolId}`)
       .then(res => res.json())
       .then(data => {
         let tempArray = []
+
         data.map(d => {
             if (d.processed_array[0]) {
                 tempArray.push(d.processed_array)
+                volumeData.push(d.processed_array[5])
                 return {time: parseInt(d.processed_array[0]/1000), open: d.processed_array[1], high: d.processed_array[2], low: d.processed_array[3], close: d.processed_array[4]}
             }
         });
+
         const cdata = tempArray.map(d => {
+            OHLCData.push({open:parseFloat(d[1]),high:parseFloat(d[2]),low:parseFloat(d[3]),close:parseFloat(d[4])})
             return {time:d[0]/1000,open:parseFloat(d[1]),high:parseFloat(d[2]),low:parseFloat(d[3]),close:parseFloat(d[4])}
         });
 
@@ -228,7 +251,7 @@
               // LP DATA
               $('#lp_x').text(Math.round((d.lp_x / 10**8) * 100) / 100)
               $('#lp_y').text(d.lp_y)
-              $('#market-history').append(`<tr class="${d.type == 'buy' ? 'table-success' : 'table-danger'}"><td>${d.address}</td><td>${d.type}</td><td>${d.type == 'buy' ? d.out_amount : d.in_amount} ${d.token_x}</td><td>${d.price}</td><td><a href="https://explorer.devnet.sui.io/transactions/${encodeURI(d.transaction_id)}">Tx Id</a></td></tr>`)
+              $('#market-history').append(`<tr class="${d.type == 'buy' ? 'table-success' : 'table-danger'}"><td>${d.address}</td><td>${d.type}</td><td>${d.type == 'buy' ? d.out_amount : d.in_amount}</td><td>${d.type == 'sell' ? d.out_amount : d.in_amount}</td><td>${d.price}</td><td><a href="https://explorer.devnet.sui.io/transactions/${encodeURI(d.transaction_id)}">Tx Id</a></td></tr>`)
             });
         } else {
             alert_modal('Error', 'Couldn\'t load data !');

@@ -97,6 +97,7 @@ def get_price_data(pool_id):
         open_candle_timestamp = 0
         open_price = 0
         next_candle_timestamp = 0
+        candle_volume = 0
         candle_array = []
         candle_temp_array = []
         for transaction_info_payload in transaction_info_payloads:
@@ -131,26 +132,29 @@ def get_price_data(pool_id):
                                 out_amount = float(transaction_info_move_event_fields['out_amount'])
                                 in_amount = float(transaction_info_move_event_fields['in_amount']) / OCTA
                                 price = round(out_amount / in_amount, 2)
+                                candle_volume += out_amount
                             else:
                                 # Buy
                                 transaction_type = 'buy'
                                 out_amount = float(transaction_info_move_event_fields['out_amount']) / OCTA
                                 in_amount = float(transaction_info_move_event_fields['in_amount'])
                                 price = round(in_amount / out_amount, 2)
+                                candle_volume += in_amount
 
                             if open_candle_timestamp == 0:
                                 open_candle_timestamp = timestamp_ms
                                 open_price = price
                                 next_candle_timestamp = timestamp_ms + 15 * 60000
+                                candle_volume = 0
 
                                 candle_temp_array.append({"timestamp": open_candle_timestamp, "price": price})
                             elif next_candle_timestamp >= timestamp_ms:
                                 candle_temp_array.append({"timestamp": open_candle_timestamp, "price": price})
                             else:
-                                # [timestamp, open, high, low, close]
+                                # [timestamp, open, high, low, close, volume]
                                 processed_array = [timestamp_ms, open_price,
                                                    max(candle_temp_array, key=lambda x: x['price'])["price"],
-                                                   min(candle_temp_array, key=lambda x: x['price'])["price"], price]
+                                                   min(candle_temp_array, key=lambda x: x['price'])["price"], price, candle_volume]
 
                                 candle_array.append(candle_temp_array)
                                 candle_temp_array = []
